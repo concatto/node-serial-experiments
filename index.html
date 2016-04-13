@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script>
+      var socket = io();
+      socket.on("brightness", function(value) {
+        var buf = new Uint8Array(value);
+        $("#slider").val(buf[0]);
+      });
+
+      function sendSliderValue() {
+        var value = parseInt($("#slider").val());
+        socket.emit("brightness", value & 0xFF);
+      }
+
+      $(function() {
+        $("#slider").on("change", sendSliderValue);
+        $("#slider").on("input", sendSliderValue);
+      });
+
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <input type="range" min="0" max="255" step="1" id="slider" style="width: 300px;"/>
+    </div>
+  </body>
+</html>
