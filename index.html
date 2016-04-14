@@ -15,15 +15,17 @@
       }
 
       $(function() {
-        $("#slider").on("change", sendSliderValue);
-        $("#slider").on("input", sendSliderValue);
+        $("#send-button").on("click", function() {
+          socket.emit("code", $("#text-area").val());
+        });
       });
 
     </script>
   </head>
   <body>
     <div id="root">
-      <input type="range" min="0" max="255" step="1" id="slider" style="width: 300px;"/>
+      <textarea id="text-area" style="width: 400px;height:200px;"></textarea>
+      <input type="button" id="send-button" value="Enviar" style="display:block;"/>
     </div>
   </body>
 </html>
