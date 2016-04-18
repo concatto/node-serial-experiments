@@ -26,38 +26,3 @@ body {
 #ports ul {
     list-style: none;
 }
-
-.switch {
-    position: relative;
-    width: 55px;
-}
-.switch-checkbox {
-    display: none;
-}
-.switch-label {
-    display: block; overflow: hidden; cursor: pointer;
-    height: 20px; padding: 0; line-height: 20px;
-    border: 0px solid #FFFFFF; border-radius: 30px;
-    background-color: #9E9E9E;
-}
-.switch-label:before {
-    content: "";
-    display: block; width: 30px; margin: -5px;
-    background: #FFFFFF;
-    position: absolute; top: 0; bottom: 0;
-    right: 31px;
-    border-radius: 30px;
-}
-.switch-checkbox:checked + .switch-label {
-    background-color: #43B5F7;
-}
-.switch-checkbox:checked + .switch-label, .switch-checkbox:checked + .switch-label:before {
-   border-color: #43B5F7;
-}
-.switch-checkbox:checked + .switch-label .switch-inner {
-    margin-left: 0;
-}
-.switch-checkbox:checked + .switch-label:before {
-    right: 0px;
-    background-color: #1D91DE;
-}
