@@ -20,6 +20,7 @@
                 $("#verify-button").on("click", function() {
                     socket.emit("request", 1) //Is the serial port open?
                 });
+
             });
         </script>
     </head>
@@ -28,6 +29,14 @@
             <input type="button" id="verify-button" value="Verificar"/>
             <textarea id="code-area"></textarea>
             <input type="button" id="send-button" value="Enviar"/>
+        </div>
+        <div id="ports">
+          <ul>
+            <li class="port">
+
+
+            </li>
+          </ul>
         </div>
     </body>
 </html>
