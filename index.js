@@ -1,68 +1,96 @@
-var express = require("express")();
-var http = require("http").Server(express);
-var io = require("socket.io")(http);
+var express = require("express");
+var http = require("http");
 var SerialPort = require("serialport").SerialPort
+var Queue = require("./queue.js")
 
-var currentValue = 0;
-var port = new SerialPort("/dev/ttyUSB0");
+var app = express();
+var server = http.Server(app);
+var io = require("socket.io")(server);
 
-var Arduino = function(serialPort) {
-  this.serialPort = serialPort;
+function Arduino(portName) {
+    var instance = this;
+
+    this.queue = new Queue();
+    this.serialPort = new SerialPort(portName);
+    this.serialPort.on("data", function(data) {
+        //If we receive a "done" signal
+        if (data[0] == 0) {
+            console.log("Done received");
+            if (instance.queue.isEmpty() == false) {
+                instance.queue.dequeue(); //Remove the operation that was just completed
+                console.log("Dequeuing");
+                var op = instance.queue.peek();
+                if (op !== undefined) {
+                    instance.writeData([op.command, op.pin, op.value]); //Execute the next
+                }
+            }
+        }
+    });
+
+    this.writeData = function(bytes) {
+        console.log("Executing " + bytes);
+        this.serialPort.write(new Buffer(bytes));
+    }
+
+    this.write = function(command, pin, value) {
+        if (this.serialPort.isOpen()) {
+            this.queue.enqueue({command: command, pin: pin, value: value});
+
+            //If this is the only operation in the queue, execute it
+            if (this.queue.getLength() == 1) {
+                this.writeData([command, pin, value]);
+            }
+        } else {
+            console.log("not open");
+        }
+    }
+
+    this.wait = function(value) {
+        this.write(2, 0, Math.round(value / 5.0));
+    }
+
+    this.control = function(pin, value) {
+        this.write(1, pin, Math.round(value * 255));
+    }
+
+    this.configure = function(pin, value) {
+        this.write(0, pin, value);
+    }
+
+    this.isOpen = function() {
+        return this.serialPort.isOpen();
+    }
 }
 
-/**
- * Value: 0 to 1, where 1 is HIGH.
- */
-Arduino.prototype.write = function(command, value) {
-  if (this.serialPort.isOpen()) {
-    console.log("writing " + command + ", " + value);
-    this.serialPort.write(new Buffer([command, value]));
-  } else {
-    console.log("not open");
-  }
-}
+var arduino = new Arduino("COM6");
 
-Arduino.prototype.control = function(pin, value) {
-  this.write(pin, Math.round(value * 255));
-}
+app.use(express.static("public"));
 
-Arduino.prototype.wait = function(value) {
-  this.write(1, Math.round(value / 5.0));
-}
-
-var arduino = new Arduino(port);
-
-express.get("/", function(req, res) {
-  res.sendFile(__dirname + "/index.html");
+app.get("/", function(req, res) {
+    res.sendFile(__dirname + "/index.html");
 });
-
-function broadcastValue(socket) {
-  var sender = socket != undefined ? socket.broadcast : io;
-  sender.emit("brightness", new Buffer([currentValue]));
-}
 
 io.on("connection", function(socket) {
-  socket.on("code", function(data) {
-    var commands = data.split("\n");
-    for (var i = 0; i < commands.length; i++) {
-      var tokens = commands[i].split(" ");
-      console.log(tokens);
-      if (tokens[0] == "wait") {
-        arduino.wait(parseInt(tokens[1]));
-      } else if (tokens[0] == "control") {
-        arduino.control(parseInt(tokens[1]), parseInt(tokens[2]));
-      }
-    }
-  });
+    socket.on("code", function(data) {
+        var commands = data.split("\n");
+        for (var i = 0; i < commands.length; i++) {
+            var tokens = commands[i].split(" ");
+            if (tokens[0] == "wait") {
+                arduino.wait(parseInt(tokens[1]));
+            } else if (tokens[0] == "control") {
+                arduino.control(parseInt(tokens[1]), parseInt(tokens[2]));
+            } else if (tokens[0] == "configure") {
+                arduino.configure(parseInt(tokens[1]), parseInt(tokens[2]));
+            }
+        }
+    });
 
-  /*broadcastValue(socket);
-  socket.on("brightness", function(value) {
-    currentValue = Math.pow(1 + (parseInt(value)/47.741), 3) - 1;
-    broadcastValue(socket);
-    if (port.isOpen()) {
-      port.write(new Buffer([currentValue]));
-    }
-  });*/
+    socket.on("request", function(data) {
+        if (data == 1) { //State request
+            var state = arduino.isOpen() ? 1 : 0;
+            socket.emit("response", new Buffer([state]));
+        }
+    });
 });
 
-http.listen(4000);
+server.listen(4000);

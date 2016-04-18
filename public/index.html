@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <title>Concatto's Laboratory</title>
+        <link rel="stylesheet" href="style.css"/>
+        <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+        <script>
+            var socket = io();
+
+            socket.on("response", function(data) {
+                var buf = new Uint8Array(data);
+                alert(buf);
+            });
+
+            $(function() {
+                $("#send-button").on("click", function() {
+                    socket.emit("code", $("#code-area").val());
+                });
+
+                $("#verify-button").on("click", function() {
+                    socket.emit("request", 1) //Is the serial port open?
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="root">
+            <input type="button" id="verify-button" value="Verificar"/>
+            <textarea id="code-area"></textarea>
+            <input type="button" id="send-button" value="Enviar"/>
+        </div>
+    </body>
+</html>
