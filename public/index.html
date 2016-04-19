@@ -21,6 +21,9 @@
                     socket.emit("request", 1) //Is the serial port open?
                 });
 
+                $("#stop-button").on("click", function() {
+                    socket.emit("stop");
+                });
             });
         </script>
     </head>
@@ -29,6 +32,7 @@
             <input type="button" id="verify-button" value="Verificar"/>
             <textarea id="code-area"></textarea>
             <input type="button" id="send-button" value="Enviar"/>
+            <input type="button" id="stop-button" value="Interromper"/>
         </div>
         <div id="ports">
           <ul>

@@ -9,7 +9,8 @@ var app = express();
 var server = http.Server(app);
 var io = require("socket.io")(server);
 
-var arduino = new Arduino("/dev/ttyUSB0", translator);
+var arduino = new Arduino(new SerialPort("/dev/ttyUSB0"), translator);
+arduino.onTermination(function() { console.log("Fin"); });
 
 app.use(express.static("public"));
 
@@ -19,7 +20,12 @@ app.get("/", function(req, res) {
 
 io.on("connection", function(socket) {
     socket.on("code", function(data) {
-        arduino.executeProgram(data, function() { console.log("Fin"); });
+        arduino.executeProgram(data);
+    });
+
+    socket.on("stop", function() {
+        console.log("halting");
+        arduino.halt();
     });
 
     /*socket.on("request", function(data) {

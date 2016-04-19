@@ -31,15 +31,16 @@ function translateOperation(lexemes) {
         } else {
             operation.firstOperand = parseInt(firstOperand);
             operation.secondOperand = parseFloat(secondOperand);
+
+            if (code === 2) operation.secondOperand *= 0xFF;
         }
     } else if (code === 100) {
         operation.type = "repeat";
-        operation.count = parseInt(lexemes[1]);
+        operation.amount = (lexemes[1] === "forever") ? lexemes[1] : parseInt(lexemes[1]);
     } else if (code === 101) {
         operation.type = "end";
     }
 
-    operation.text = lexemes.join(" ");
     return operation;
 }
 
