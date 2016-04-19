@@ -1,51 +1,70 @@
-function Arduino(portName) {
+function Arduino(serialPort, translator) {
     var instance = this;
 
-    this.queue = new Queue();
-    this.serialPort = new SerialPort(portName);
+    this.loopStack = [];
+    this.executing = false;
+    this.translator = translator;
+    /*this.serialPort = new SerialPort(portName);
     this.serialPort.on("data", function(data) {
         //If we receive a "done" signal
         if (data[0] == 0) {
             console.log("Done received");
-            if (instance.queue.isEmpty() == false) {
-                instance.queue.dequeue(); //Remove the operation that was just completed
-                console.log("Dequeuing");
-                var op = instance.queue.peek();
-                if (op !== undefined) {
-                    instance.writeData([op.command, op.pin, op.value]); //Execute the next
-                }
-            }
+
         }
-    });
+    });*/
 
     this.writeData = function(bytes) {
         console.log("Executing " + bytes);
-        this.serialPort.write(new Buffer(bytes));
+        //this.serialPort.write(new Buffer(bytes));
     }
 
-    this.write = function(command, pin, value) {
-        if (this.serialPort.isOpen()) {
-            this.queue.enqueue({command: command, pin: pin, value: value});
-
-            //If this is the only operation in the queue, execute it
-            if (this.queue.getLength() == 1) {
-                this.writeData([command, pin, value]);
-            }
-        } else {
-            console.log("not open");
+    this.halt = function() {
+        this.executing = false;
+        if (this.terminationCallback !== undefined) {
+            this.terminationCallback();
         }
     }
 
-    this.wait = function(value) {
-        this.write(2, 0, Math.round(value / 5.0));
+    this.executeNextInstruction = function() {
+        if (this.programCounter === this.program.length) {
+            this.halt();
+            return;
+        }
+
+        var operation = this.program[this.programCounter];
+
+        if (operation.type === "instruction") {
+            console.log(operation.text);
+        } else if (operation.type === "repeat") {
+            //Push the current program counter into the stack
+            this.loopStack.push({
+                programCounter: this.programCounter,
+                count: operation.count
+            });
+        } else if (operation.type === "end") {
+            var head = this.loopStack[this.loopStack.length - 1];
+            if (head !== undefined) {
+                head.count--; //Decrement the amount of jumps
+                if (head.count > 0) {
+                    this.programCounter = head.programCounter;
+                } else {
+                    this.loopStack.pop(); //Count is 0, remove the loop from the stack
+                }
+            }
+        }
+
+        this.programCounter++;
     }
 
-    this.control = function(pin, value) {
-        this.write(1, pin, Math.round(value * 255));
-    }
+    this.executeProgram = function(program, terminationCallback) {
+        this.program = this.translator.translate(program);
+        this.programCounter = 0;
+        this.terminationCallback = terminationCallback;
+        this.executing = true;
 
-    this.configure = function(pin, value) {
-        this.write(0, pin, value);
+        while (this.executing) {
+            this.executeNextInstruction();
+        }
     }
 
     this.isOpen = function() {

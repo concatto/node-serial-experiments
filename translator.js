@@ -1,49 +1,74 @@
 var operationTable = {
-  "configure": 0,
-  "control": 1,
-  "wait": 2
+    "configure": 1,
+    "control": 2,
+    "wait": 3,
+    "repeat": 100,
+    "end": 101
 };
 
+function splitValue(value) {
+    value = parseInt(value);
+    return {
+        high: (value >> 8) & 0xFF,
+        low: value & 0xFF
+    };
+}
+
 function translateOperation(lexemes) {
-  var operation = operationTable[lexemes[0]];
-  var firstOperand = parseInt(lexemes[1]);
-  var secondOperand = lexemes[2];
+    var code = operationTable[lexemes[0]];
+    var operation = {code: code};
 
-  if (secondOperand === undefined) { //If there is only one operand, split it
-    firstOperand = parseInt(firstOperand);
+    if (code < 100) {
+        operation.type = "instruction";
+        var firstOperand = lexemes[1];
+        var secondOperand = lexemes[2];
 
-    secondOperand = firstOperand & 0xFF;
-    firstOperand = (firstOperand >> 8) & 0xFF;
-  } else {
-    secondOperand = parseFloat(secondOperand);
-  }
+        if (secondOperand === undefined) { //If there is only one operand, split it
+            var values = splitValue(firstOperand);
 
-  return {
-    op: operation,
-    first: firstOperand,
-    second: secondOperand
-  };
-}
-
-function translate(program, terminationCallback) {
-  var output = [];
-  var instructions = program.split(";");
-  instructions.pop(); //Remove the last instruction (empty)
-
-  for (var i = 0; i < instructions.length; i++) {
-    var instruction = instructions[i].trim();
-
-    if (instruction.length > 0) {
-      var lexemes = instruction.split(" ");
-      var op = translateOperation(lexemes);
-
-      if ((terminationCallback !== undefined) && (i === instructions.length - 1)) {
-        op["callback"] = terminationCallback;
-      }
-
-      output.push(op);
+            operation.firstOperand = values.high;
+            operation.secondOperand = values.low;
+        } else {
+            operation.firstOperand = parseInt(firstOperand);
+            operation.secondOperand = parseFloat(secondOperand);
+        }
+    } else if (code === 100) {
+        operation.type = "repeat";
+        operation.count = parseInt(lexemes[1]);
+    } else if (code === 101) {
+        operation.type = "end";
     }
-  }
 
-  return output;
+    operation.text = lexemes.join(" ");
+    return operation;
 }
+
+function filterArray(array, predicate) {
+    var filteredArray = [];
+    for (var i = 0; i < array.length; i++) {
+        if (predicate(array[i])) {
+            filteredArray.push(array[i]);
+        }
+    }
+    return filteredArray;
+}
+
+function translateProgram(program) {
+    var output = [];
+    var instructions = filterArray(program.split("\n"), function(str) {
+        return str.trim().length > 0;
+    });
+
+    for (var i = 0; i < instructions.length; i++) {
+        var instruction = instructions[i].trim();
+
+        var lexemes = instruction.split(" ");
+        var op = translateOperation(lexemes);
+
+        output.push(op);
+    }
+
+    return output;
+}
+
+module.exports = {translate: translateProgram};
