@@ -12,6 +12,18 @@
                 alert(buf);
             });
 
+            socket.on("state", function(state) {
+                var ports = $(".digital-port");
+                for (var i = 0; i < ports.length; i++) {
+                    var on = ((state >> (i + 2)) & 1) > 0;
+                    if (on) {
+                        $(ports[i]).addClass("active");
+                    } else {
+                        $(ports[i]).removeClass("active");
+                    }
+                }
+            });
+
             $(function() {
                 $("#send-button").on("click", function() {
                     socket.emit("code", $("#code-area").val());
@@ -24,23 +36,46 @@
                 $("#stop-button").on("click", function() {
                     socket.emit("stop");
                 });
+
+                $(".digital-port").on("click", function() {
+                    var op = $(this).hasClass("active") ? "off" : "on";
+                    var port = $(this).data("port");
+                    socket.emit("command", {op: op, port: port});
+
+                    $(this).toggleClass("active");
+                });
             });
         </script>
     </head>
     <body>
         <div id="root">
-            <input type="button" id="verify-button" value="Verificar"/>
-            <textarea id="code-area"></textarea>
-            <input type="button" id="send-button" value="Enviar"/>
-            <input type="button" id="stop-button" value="Interromper"/>
-        </div>
-        <div id="ports">
-          <ul>
-            <li class="port">
-
-
-            </li>
-          </ul>
+            <div id="console" class="container">
+                <p class="container-title">Console</p>
+                <input type="button" id="verify-button" value="Verificar"/>
+                <textarea id="code-area"></textarea>
+                <input type="button" id="send-button" value="Enviar"/>
+                <input type="button" id="stop-button" value="Interromper"/>
+            </div>
+            <div id="ports" class="container">
+                <p class="container-title">Digital Ports</p>
+                <div class="port-column">
+                    <div class="port-wrapper"><div class="digital-port" data-port="2"></div><span>Digital port 2</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="3"></div><span>Digital port 3</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="4"></div><span>Digital port 4</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="5"></div><span>Digital port 5</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="6"></div><span>Digital port 6</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="7"></div><span>Digital port 7</span></div>
+                </div>
+                <div class="column-separator"></div>
+                <div class="port-column">
+                    <div class="port-wrapper"><div class="digital-port" data-port="8"></div><span>Digital port 8</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="9"></div><span>Digital port 9</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="10"></div><span>Digital port 10</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="11"></div><span>Digital port 11</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="12"></div><span>Digital port 12</span></div>
+                    <div class="port-wrapper"><div class="digital-port" data-port="13"></div><span>Digital port 13</span></div>
+                </div>
+            </div>
         </div>
     </body>
 </html>

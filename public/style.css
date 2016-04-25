@@ -1,18 +1,32 @@
 body {
-    background-color: #243D75;
+    background-color: #17375C;
+    font-family: Arial;
     text-align: center;
 }
 
 #root {
+    margin: 40px;
     display: inline-block;
-    padding: 30px 50px;
-    margin: 40px 0px;
-    background-color: #4A73A5;
-    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.3);
-    text-align: left;
 }
 
-#root input[type="button"] {
+#root > div {
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
+    background-color: #1C4471;
+    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.3);
+    margin: 0px 30px;
+    padding: 20px 40px;
+}
+
+.container-title {
+    display: block;
+    font-size: 32px;
+    margin: 10px 0px 30px;
+    color: #E7F1FF;
+}
+
+#console input[type="button"] {
     display: block;
     padding: 4px 10px;
 }
@@ -23,6 +37,52 @@ body {
     margin: 20px 0px;
 }
 
-#ports ul {
-    list-style: none;
+#ports > div {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.port-wrapper > div, .port-wrapper > span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.port-column {
+    margin: 2px 10px;
+}
+
+.column-separator {
+    width: 1px;
+    display: inline-block;
+    height: 300px;
+    margin-left: 20px;
+    margin-right: 6px;
+    background: linear-gradient(to bottom, rgba(129, 181, 213,0.2) 0%,rgba(129, 181, 213, 0.4) 50%,rgba(129, 181, 213,0.2) 100%);
+}
+
+.port-wrapper > span {
+    color: #BBD8F8;
+}
+
+.digital-port {
+    width: 30px;
+    height: 30px;
+    margin: 14px 10px;
+    cursor: pointer;
+    border-radius: 20px;
+    box-shadow: 0px 0px 3px rgba(8, 41, 120, 0.7);
+    border: 1px solid rgba(98, 126, 183, 0.65);
+    /*background: radial-gradient(ellipse at center, #1C4471 0%, #1B4778 100%);*/
+    background-color: #1C4471;
+    transition: background 0.04s linear, box-shadow 0.05s linear;
+}
+
+.digital-port:hover {
+    box-shadow: 0px 0px 3px 1px rgba(96, 120, 146, 0.8);
+}
+
+.digital-port.active {
+    /*background: radial-gradient(ellipse at center, #f1e767 0%, #feb645 100%);*/
+    background-color: #f1e767;
+    box-shadow: 0px 0px 8px 4px rgba(254, 198, 49, 0.65);
 }

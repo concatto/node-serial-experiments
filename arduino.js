@@ -1,6 +1,7 @@
 function Arduino(serialPort, translator) {
     var instance = this;
 
+    this.digitalState = 0;
     this.loopStack = [];
     this.running = false;
     this.translator = translator;
@@ -44,8 +45,17 @@ function Arduino(serialPort, translator) {
 
         if (operation.type === "instruction") {
             this.writeData([operation.code, operation.firstOperand, operation.secondOperand]);
+            if (operation.code == 2) {
+                var on = parseInt(operation.secondOperand) > 0;
+                if (on) {
+                    this.digitalState = this.digitalState | (1 << operation.firstOperand);
+                } else {
+                    this.digitalState = this.digitalState & ~(1 << operation.firstOperand);
+                }
+                console.log(this.digitalState + " uino; on = " + on);
+            }
             if (this.instructionCallback !== undefined) {
-                this.instructionCallback(this.programCounter);
+                this.instructionCallback(this.programCounter, operation);
             }
             this.programCounter++;
         } else {
@@ -94,6 +104,10 @@ function Arduino(serialPort, translator) {
 
     this.isOpen = function() {
         return this.serialPort.isOpen();
+    }
+
+    this.getDigitalState = function() {
+        return this.digitalState;
     }
 }
 
